@@ -1,0 +1,6 @@
+{
+  "name": "MaintainIQ — Maintenance Work Order Management",
+  "description": "Production-grade maintenance work-order management system with real-time lifecycle enforcement, asset tracking, and technician dispatch.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

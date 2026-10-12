@@ -1,0 +1,15 @@
+[
+  "backend/tests/test_assets_technicians.py::test_asset_lifecycle_and_history",
+  "backend/tests/test_assets_technicians.py::test_technician_registration_and_validation",
+  "backend/tests/test_business_rules.py::test_rule_1_unique_work_order_numbers_concurrent",
+  "backend/tests/test_business_rules.py::test_rule_2_critical_with_technician_succeeds_on_create",
+  "backend/tests/test_business_rules.py::test_rule_2_critical_without_technician_rejected_on_create",
+  "backend/tests/test_business_rules.py::test_rule_2_updating_to_critical_without_technician_rejected",
+  "backend/tests/test_business_rules.py::test_rule_3_completed_cannot_return_to_open",
+  "backend/tests/test_business_rules.py::test_rule_4_cancelled_cannot_move_to_in_progress",
+  "backend/tests/test_business_rules.py::test_rule_5_cannot_schedule_in_past",
+  "backend/tests/test_business_rules.py::test_rule_6_out_of_service_asset_accepts_emergency_work_order",
+  "backend/tests/test_business_rules.py::test_rule_6_out_of_service_asset_rejects_routine_work_order",
+  "backend/tests/test_business_rules.py::test_valid_transitions_lifecycle",
+  "backend/tests/test_work_orders.py::test_work_order_search_and_combined_filters"
+]
