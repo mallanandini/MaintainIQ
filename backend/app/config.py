@@ -9,6 +9,9 @@ class Settings:
     PROJECT_NAME: str = "MaintainIQ"
     PROJECT_VERSION: str = "1.0.0"
     DEBUG: bool = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development")).lower()
+    ALLOW_SEEDING: bool = os.getenv("ALLOW_SEEDING", "True" if os.getenv("ENVIRONMENT", os.getenv("NODE_ENV", "development")).lower() in ("development", "dev", "test") else "False").lower() in ("true", "1", "t")
+    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "")
 
     @property
     def DATABASE_URL(self) -> str:

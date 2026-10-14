@@ -4,6 +4,12 @@ from backend.app.models.asset import Asset
 from backend.app.models.technician import Technician
 from backend.app.models.maintenance_type import MaintenanceType
 from backend.app.models.work_order import WorkOrder, WorkOrderStatusHistory
+from backend.app.models.checklist import (
+    ChecklistTemplate,
+    ChecklistTemplateItem,
+    WorkOrderChecklist,
+    WorkOrderChecklistItem
+)
 from backend.app.database import SessionLocal, Base, engine
 
 def seed_database(db: Session = None):
@@ -66,6 +72,10 @@ def seed_database(db: Session = None):
                 "manufacturer": "Haas Automation",
                 "model_number": "VF-5/40XT",
                 "criticality": "HIGH",
+                "operating_hours": 4850.0,
+                "service_threshold_hours": 5000.0,
+                "operating_cycles": 9600,
+                "service_threshold_cycles": 10000,
                 "notes": "Primary aluminum impeller milling unit. Requires tight spindle tolerances."
             },
             {
@@ -78,6 +88,10 @@ def seed_database(db: Session = None):
                 "manufacturer": "Cleaver-Brooks",
                 "model_number": "CBL-700-600",
                 "criticality": "CRITICAL",
+                "operating_hours": 8200.0,
+                "service_threshold_hours": 8000.0,
+                "operating_cycles": 16500,
+                "service_threshold_cycles": 15000,
                 "notes": "Provides high pressure process steam for sterilization and heating."
             },
             {
@@ -90,6 +104,10 @@ def seed_database(db: Session = None):
                 "manufacturer": "Trane",
                 "model_number": "CTV-E450",
                 "criticality": "HIGH",
+                "operating_hours": 3100.0,
+                "service_threshold_hours": 4000.0,
+                "operating_cycles": 6200,
+                "service_threshold_cycles": 8000,
                 "notes": "Chilled water circulation for cleanroom zone B."
             },
             {
@@ -102,6 +120,10 @@ def seed_database(db: Session = None):
                 "manufacturer": "Komatsu",
                 "model_number": "H2P-500",
                 "criticality": "CRITICAL",
+                "operating_hours": 5400.0,
+                "service_threshold_hours": 5000.0,
+                "operating_cycles": 11000,
+                "service_threshold_cycles": 10000,
                 "notes": "Main hydraulic cylinder seal blew on morning shift. Strictly offline until rebuilt."
             },
             {
@@ -114,6 +136,10 @@ def seed_database(db: Session = None):
                 "manufacturer": "KUKA Robotics",
                 "model_number": "KR Quantec",
                 "criticality": "HIGH",
+                "operating_hours": 1200.0,
+                "service_threshold_hours": 5000.0,
+                "operating_cycles": 2400,
+                "service_threshold_cycles": 10000,
                 "notes": "Dual arm spot welder. Calibrated last month."
             },
             {
@@ -126,7 +152,27 @@ def seed_database(db: Session = None):
                 "manufacturer": "Ingersoll Rand",
                 "model_number": "Nirvana 75",
                 "criticality": "MEDIUM",
+                "operating_hours": 2100.0,
+                "service_threshold_hours": 4500.0,
+                "operating_cycles": 4200,
+                "service_threshold_cycles": 9000,
                 "notes": "Feeds plant pneumatic tooling at 125 PSI."
+            },
+            {
+                "asset_tag": "AST-0107",
+                "name": "Auxiliary Staging Conveyor",
+                "category": "Material Handling",
+                "location": "Warehouse C - Staging Dock",
+                "status": "OPERATIONAL",
+                "serial_number": "DODGE-TR-2024",
+                "manufacturer": "Dodge Industrial",
+                "model_number": "Torq-500",
+                "criticality": "LOW",
+                "operating_hours": None,
+                "operating_cycles": None,
+                "service_threshold_hours": None,
+                "service_threshold_cycles": None,
+                "notes": "Newly installed auxiliary conveyor awaiting telemetry integration. No baseline data yet."
             }
         ]
 
@@ -139,6 +185,10 @@ def seed_database(db: Session = None):
                 db.flush()
                 assets[ad["asset_tag"]] = a
             else:
+                for k, v in ad.items():
+                    if getattr(existing, k, None) is None:
+                        setattr(existing, k, v)
+                db.flush()
                 assets[ad["asset_tag"]] = existing
 
         # 4. Work Orders with Realistic Audit Trails
@@ -360,7 +410,6 @@ def seed_database(db: Session = None):
                 updated_at=now - timedelta(hours=1)
             )
             db.add(wo6)
-            db.flush()
             db.add(WorkOrderStatusHistory(
                 work_order_id=wo6.id,
                 from_status=None,
@@ -369,6 +418,168 @@ def seed_database(db: Session = None):
                 notes="Emergency ticket created with Sophia Zhang dispatched immediately.",
                 created_at=now - timedelta(hours=2)
             ))
+
+        # 5. Inspection Checklist Templates
+        templates_data = [
+            {
+                "title": "HVAC Chiller & Refrigeration Loop Inspection",
+                "description": "Standard diagnostic and preventative verification for chillers, condensers, and thermal exchange systems.",
+                "asset_category": "HVAC",
+                "maintenance_type_code": "CORRECTIVE",
+                "items": [
+                    ("Refrigerant Loop Suction & Discharge Pressure", "Check gauges against operating design curve (nominal 65 PSI suction)", True),
+                    ("Condenser Coils & Fin Matrix Condition", "Inspect for debris fouling, corrosion, and air restriction", True),
+                    ("Compressor Vibration & Mounting Damper Integrity", "Measure harmonic vibration levels and examine rubber isolators", False),
+                    ("Expansion Valve & Solenoid Control Response", "Confirm smooth modulation and zero stickiness under cycling load", True),
+                    ("Refrigerant Tracer Gas Leak Detection", "Perform electronic halogen or nitrogen bubble test on high-stress joints", True),
+                ]
+            },
+            {
+                "title": "High-Pressure Hydraulic Stamping Press Safety Inspection",
+                "description": "Critical integrity and safety verification for 500T+ stamping presses and hydraulic power units.",
+                "asset_category": "Hydraulics",
+                "maintenance_type_code": "EMERGENCY",
+                "items": [
+                    ("Main Hydraulic Ram Rod & Chevron Packing Seals", "Examine cylinder rod for scoring, chrome peeling, and oil weepage", True),
+                    ("Proportional Relief Valve Pop-Off Setting", "Verify relief pressure cuts out at 3000 PSI maximum limit", True),
+                    ("Emergency Dual-Hand Anti-Tie-Down Control & Light Curtains", "Perform physical test of optical curtain cutoff response (<20ms)", True),
+                    ("Reservoir Oil Level, Temperature & Filter Delta-P", "Verify fluid clarity, temperature under 55C, and filter indicator in green", True),
+                    ("Flexible Hydraulic Hose Crimps & Bend Radii", "Inspect high-pressure braided lines for bulging, scuffing, or kinking", False),
+                ]
+            },
+            {
+                "title": "Industrial Boiler & Steam Vessel Safety Certification",
+                "description": "Annual regulatory inspection and safeguard timing test for high-pressure steam boilers.",
+                "asset_category": "Thermal & Energy",
+                "maintenance_type_code": "CALIBRATION",
+                "items": [
+                    ("ASME Section I Safety Relief Valve Pop & Reseat Test", "Perform hydrostatic lift test to verify rated setpoint pop-off", True),
+                    ("Burner Flame Safeguard Ultraviolet Scanner Calibration", "Measure flame signal strength (minimum 4.0 VDC) and verify quick cutoff", True),
+                    ("Low-Water Cutoff (LWCO) Float Chamber Blowdown", "Confirm automatic fuel shutoff trips when float chamber water is evacuated", True),
+                    ("Forced Draft Damper Actuator & Air/Fuel Ratio Linkage", "Inspect linkage play, zero hysteresis, and verify smooth modulation", False),
+                ]
+            },
+            {
+                "title": "CNC Machining Center Spindle & Axis Way-Lube Inspection",
+                "description": "Precision alignment and preventative lubrication verification for 5-axis CNC machining centers.",
+                "asset_category": "CNC Machinery",
+                "maintenance_type_code": "PREVENTATIVE",
+                "items": [
+                    ("Spindle Taper Runout & Drawbar Retention Force", "Verify runout under 0.003mm using 300mm precision test bar", True),
+                    ("Way Lube Metering Unit & Pneumatic Pressure", "Inspect pump displacement and clear any blockage in distribution blocks", True),
+                    ("X/Y/Z Axis Telescopic Way Cover Wiper Seals", "Check rubber wipers for tear, chip accumulation, and binding", True),
+                    ("Coolant Concentration & Refractometer Brix Value", "Measure water-soluble coolant emulsion (target 7.5% - 9.0%)", False),
+                ]
+            },
+            {
+                "title": "General Facility & Mechanical Baseline Safety Checklist",
+                "description": "Standard multi-point safety and mechanical baseline check for all manufacturing equipment.",
+                "asset_category": "General",
+                "maintenance_type_code": None,
+                "items": [
+                    ("Emergency Stop Pushbuttons & Safety Interlocks", "Verify all E-stops cut power cleanly and latch until manually reset", True),
+                    ("Electrical Enclosure, Grounding & Cable Protection", "Inspect conduit, cable glands, and verify earth grounding continuity", True),
+                    ("Moving Parts Guarding & Pinch Point Shields", "Ensure fixed and interlocking guards are secured in place", True),
+                    ("Operating Clearance & Housekeeping Perimeter", "Check 1-meter service clearance is free of tripping hazards and oil spills", False),
+                ]
+            }
+        ]
+
+        seeded_templates = {}
+        for td in templates_data:
+            existing_tmpl = db.query(ChecklistTemplate).filter(ChecklistTemplate.title == td["title"]).first()
+            mt_id = maint_types[td["maintenance_type_code"]].id if td["maintenance_type_code"] and td["maintenance_type_code"] in maint_types else None
+            if not existing_tmpl:
+                tmpl = ChecklistTemplate(
+                    title=td["title"],
+                    description=td["description"],
+                    asset_category=td["asset_category"],
+                    maintenance_type_id=mt_id,
+                    is_active=True
+                )
+                db.add(tmpl)
+                db.flush()
+                for idx, (txt, desc, req) in enumerate(td["items"], start=1):
+                    item = ChecklistTemplateItem(
+                        template_id=tmpl.id,
+                        order_index=idx,
+                        item_text=txt,
+                        description=desc,
+                        is_required=req
+                    )
+                    db.add(item)
+                db.flush()
+                seeded_templates[td["title"]] = tmpl
+            else:
+                seeded_templates[td["title"]] = existing_tmpl
+
+        # 6. Seed active checklist on WO-2026-0001 (In Progress Chiller) if none exists
+        wo1_obj = db.query(WorkOrder).filter(WorkOrder.work_order_number == "WO-2026-0001").first()
+        if wo1_obj and not wo1_obj.checklist:
+            hvac_tmpl = seeded_templates.get("HVAC Chiller & Refrigeration Loop Inspection")
+            wo1_cl = WorkOrderChecklist(
+                work_order_id=wo1_obj.id,
+                template_id=hvac_tmpl.id if hvac_tmpl else None,
+                title="HVAC Chiller & Refrigeration Loop Inspection",
+                summary_notes="Inspection in progress. Detected refrigerant circuit micro-leakage on manifold header."
+            )
+            db.add(wo1_cl)
+            db.flush()
+            if hvac_tmpl and hvac_tmpl.items:
+                statuses = ["PASS", "PASS", "PASS", "PASS", "FAIL"]
+                notes_list = [
+                    "Suction pressure verified at 64.5 PSI (within 2% tolerance).",
+                    "Condenser matrix clean; minimal dust accumulation.",
+                    "Vibration within ISO 10816 class II velocity tolerances (1.8 mm/s).",
+                    "Electronic TXV responded instantaneously to 5V test signal.",
+                    "Nitrogen bubble test confirmed pinhole leak on Circuit 2 high-side flare nut."
+                ]
+                for idx, t_item in enumerate(hvac_tmpl.items):
+                    db.add(WorkOrderChecklistItem(
+                        checklist_id=wo1_cl.id,
+                        order_index=t_item.order_index,
+                        item_text=t_item.item_text,
+                        description=t_item.description,
+                        is_required=t_item.is_required,
+                        status=statuses[idx % len(statuses)],
+                        notes=notes_list[idx % len(notes_list)],
+                        inspected_at=now - timedelta(hours=1),
+                        inspected_by="Marcus Vance"
+                    ))
+
+        # 7. Seed completed checklist on WO-2026-0004 (Completed Boiler) if none exists
+        wo4_obj = db.query(WorkOrder).filter(WorkOrder.work_order_number == "WO-2026-0004").first()
+        if wo4_obj and not wo4_obj.checklist:
+            boiler_tmpl = seeded_templates.get("Industrial Boiler & Steam Vessel Safety Certification")
+            wo4_cl = WorkOrderChecklist(
+                work_order_id=wo4_obj.id,
+                template_id=boiler_tmpl.id if boiler_tmpl else None,
+                title="Industrial Boiler & Steam Vessel Safety Certification",
+                summary_notes="All hydrostatic safety thresholds and safety relief valve settings verified in compliance with ASME Section I.",
+                completed_at=now - timedelta(days=2),
+                completed_by="Devon Cole"
+            )
+            db.add(wo4_cl)
+            db.flush()
+            if boiler_tmpl and boiler_tmpl.items:
+                pass_notes = [
+                    "Valves popped precisely at 150.2 PSI; reseated cleanly without chatter at 144.1 PSI.",
+                    "UV scanner signal 4.8 VDC; flame loss safety interlock responded in 1.4 seconds (limit 4.0s).",
+                    "Low water cutoff float evacuated; burner relay cut in 0.8 seconds.",
+                    "Air damper stroke inspected; zero backlash observed across 0-100% modulation range."
+                ]
+                for idx, t_item in enumerate(boiler_tmpl.items):
+                    db.add(WorkOrderChecklistItem(
+                        checklist_id=wo4_cl.id,
+                        order_index=t_item.order_index,
+                        item_text=t_item.item_text,
+                        description=t_item.description,
+                        is_required=t_item.is_required,
+                        status="PASS",
+                        notes=pass_notes[idx % len(pass_notes)],
+                        inspected_at=now - timedelta(days=2, hours=1),
+                        inspected_by="Devon Cole"
+                    ))
 
         db.commit()
         print("Database successfully seeded with realistic maintenance operations data.")

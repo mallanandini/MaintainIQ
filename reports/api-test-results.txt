@@ -1,0 +1,33 @@
+C:\Users\hp\Downloads\maintainiq-—-maintenance-work-order-management\.venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+  from starlette.testclient import TestClient as TestClient  # noqa
+=== MaintainIQ Live API & Business Rule Verification Suite ===
+[INFO] Live HTTP server not listening on 3001; testing directly against live MySQL via FastAPI TestClient.
+[PASS] [1/22] Health check passed: {'status': 'ok', 'service': 'MaintainIQ API', 'version': '1.0.0'}
+[PASS] [2/12] Registered asset: AST-VERIFY-070512 (ID: 65 )
+[PASS] [3/12] Registered technician: David Miller (ID: 38 )
+[PASS] [4/12] Rule 5 enforced: Past scheduled date correctly rejected (422)
+[PASS] [5/12] Rule 2 enforced: CRITICAL work order without technician rejected (422)
+[PASS] [6/12] Rule 6 enforced: Non-emergency work order on OUT_OF_SERVICE asset rejected (422)
+[PASS] [7/12] Work order created successfully: WO-2026-0063 (Status: ASSIGNED )
+[PASS] [8/12] Rule 2 enforced on update: Updating to CRITICAL without technician rejected (422)
+[PASS] [9/12] Valid status transition: ASSIGNED -> IN_PROGRESS succeeded
+[PASS] [10/12] Valid status transition: IN_PROGRESS -> COMPLETED succeeded
+[PASS] [11/12] Rule 3 enforced: COMPLETED is terminal; cannot transition to OPEN (422)
+[PASS] Rule 4 enforced: CANCELLED is terminal; cannot transition to IN_PROGRESS (422)
+[PASS] [12/12] Maintenance history audit trail verified (3 status entries).
+[PASS] [13/14] Phase 2 Asset Maintenance History endpoint verified (2 records, newest-first ordering, completed date present).
+[PASS] [15/17] Phase 3 Work-Order Status History endpoint verified (3 records in ascending chronological order).
+[PASS] [16/17] Phase 3 Reverse-chronological history sorting verified.
+[PASS] [17/20] Nonexistent work order history returns 404 as expected.
+[PASS] [18/20] Phase 4 Work-Order Technician Recommendations verified (Top match: David Miller, Score: 95.0).
+[PASS] [19/20] Phase 4 Prospective Technician Recommendations verified (3 eligible active candidates).
+[PASS] [20/21] Phase 4 Deterministic ranking consistency verified.
+[PASS] [21/22] Phase 5 Maintenance Analytics endpoint verified (Total WOs: 64, Completion Rate: 45.3%, Overdue: 3).
+[PASS] [22/23] Asset Health & Risk Monitoring verified (Fleet assets evaluated: 66, Sample asset: AST-0101, Risk: LOW).
+[PASS] [23/27] Digital Inspection Checklists verified (Template: 'CNC Machining Center Spindle & Axis Way-Lube Inspection', Items: 4, Completion: 100%, History linked).
+[PASS] [24/27] Technician Lifecycle Management verified (Deactivation, Reactivation, Active Order 409, History 409, Clean Deletion 200, Invalid 404).
+[PASS] [25/27] Bulk Technician Assignment verified (1 orders reassigned).
+[PASS] [26/27] Work Order Duplication verified (Original: WO-2026-0063 -> Cloned: WO-2026-0066).
+[PASS] [27/27] Work Order CSV Export verified (CSV headers and records present).
+
+ALL 27 END-TO-END VALIDATION CHECKS PASSED AGAINST LIVE DATABASE!

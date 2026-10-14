@@ -1,1 +1,307 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-page: #F8FAFC;
+  --bg-header: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #080F1E;
+  --bg-table: #FFFFFF;
+  --bg-table-hover: #F8FAFC;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-muted: #1E293B;
+  --border-color: #CBD5E1;
+  --accent-color: #0D9488;
+  --chart-tick: #000000;
+  --chart-grid: #E2E8F0;
+  color-scheme: light;
+}
+
+.dark {
+  --bg-page: #0B1220;
+  --bg-header: #111B2E;
+  --bg-card: #172338;
+  --bg-sidebar: #080F1E;
+  --bg-table: #131F32;
+  --bg-table-hover: #1E3048;
+  --text-primary: #FFFFFF;
+  --text-secondary: #FFFFFF;
+  --text-muted: #94A3B8;
+  --border-color: #334155;
+  --accent-color: #2DD4BF;
+  --chart-tick: #FFFFFF;
+  --chart-grid: #334155;
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   FEATURE: HIGH-CONTRAST PURE BLACK TEXT IN LIGHT MODE
+   No grayish or faded text anywhere in light theme.
+   ========================================================================== */
+html:not(.dark) {
+  color: #000000;
+}
+
+html:not(.dark) body,
+html:not(.dark) #root {
+  color: #000000;
+  background-color: var(--bg-page);
+}
+
+/* Ensure headings, labels, descriptions, table cells, form labels, helper text are crisp pure black on light surfaces */
+html:not(.dark) :is(
+  h1, h2, h3, h4, h5, h6,
+  p, span, label, dt, dd, td, th, li,
+  .text-slate-400, .text-slate-500, .text-slate-600, .text-slate-700, .text-slate-800, .text-slate-900,
+  .text-gray-400, .text-gray-500, .text-gray-600, .text-gray-700, .text-gray-800, .text-gray-900
+):not(aside *):not([class*="badge"]):not([class*="Badge"]):not([class*="text-teal"]):not([class*="text-rose"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-blue"]):not([class*="text-white"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-emerald"]):not([class*="bg-slate-9"]):not([class*="bg-slate-8"]) {
+  color: #000000;
+}
+
+/* Form inputs high contrast in light mode */
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  color: #000000 !important;
+  background-color: #FFFFFF;
+  border-color: #94A3B8;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #1E293B !important;
+  opacity: 0.9 !important;
+}
+
+/* Disabled controls remain distinguishable but high-contrast readable */
+html:not(.dark) input:disabled,
+html:not(.dark) select:disabled,
+html:not(.dark) textarea:disabled,
+html:not(.dark) button:disabled {
+  color: #334155 !important;
+  background-color: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+  cursor: not-allowed;
+}
+
+/* Table header text high contrast */
+html:not(.dark) th {
+  color: #000000 !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   FEATURE: DARK MODE THEME SYSTEM (EXACT SEMANTIC PALETTE)
+   Main page: #0B1220
+   Sidebar: #080F1E
+   Header: #111B2E
+   Card: #172338
+   Table: #131F32
+   Table hover: #1E3048
+   Borders: #334155
+   Primary text: #FFFFFF
+   Secondary text: #FFFFFF
+   Brand accent: #2DD4BF
+   ========================================================================== */
+.dark body,
+.dark #root,
+.dark main {
+  color: #FFFFFF;
+  background-color: #0B1220 !important;
+}
+
+/* Header in dark mode */
+.dark header {
+  background-color: #111B2E !important;
+  border-color: #334155 !important;
+  color: #FFFFFF;
+}
+
+/* Typography in dark mode */
+.dark :is(
+  h1, h2, h3, h4, h5, h6,
+  p, span, label, dt, dd, td, th, li,
+  .text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600,
+  .text-gray-900, .text-gray-800, .text-gray-700
+):not([class*="badge"]):not([class*="Badge"]):not([class*="text-teal"]):not([class*="text-rose"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-indigo"]):not([class*="text-blue"]):not([class*="bg-teal"]):not([class*="bg-rose"]):not([class*="bg-emerald"]) {
+  color: #FFFFFF;
+}
+
+.dark .text-slate-400,
+.dark .text-slate-500,
+.dark .text-gray-400,
+.dark .text-gray-500 {
+  color: #94A3B8;
+}
+
+/* Card and container surface backgrounds in dark mode */
+.dark .bg-white {
+  background-color: #172338 !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-slate-50\/80,
+.dark .bg-slate-50\/70,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/40 {
+  background-color: #111B2E !important;
+}
+
+.dark .bg-slate-100,
+.dark .bg-slate-100\/70,
+.dark .bg-slate-100\/80 {
+  background-color: #172338 !important;
+}
+
+.dark .bg-slate-200 {
+  background-color: #334155 !important;
+}
+
+/* Tables in dark mode */
+.dark table {
+  background-color: #131F32 !important;
+}
+
+.dark thead tr,
+.dark thead th {
+  background-color: #111B2E !important;
+  color: #FFFFFF !important;
+  border-color: #334155 !important;
+}
+
+.dark tbody tr {
+  background-color: #131F32 !important;
+  color: #FFFFFF !important;
+  border-color: #334155 !important;
+}
+
+.dark tbody tr:hover,
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-50\/70:hover,
+.dark .hover\:bg-slate-50\/80:hover {
+  background-color: #1E3048 !important;
+}
+
+/* Borders in dark mode */
+.dark .border-slate-200,
+.dark .border-slate-200\/90,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/70,
+.dark .border-slate-200\/60,
+.dark .border-slate-100,
+.dark .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* Inputs, Selects, Textareas in dark mode */
+.dark input,
+.dark select,
+.dark textarea {
+  color: #FFFFFF !important;
+  background-color: #131F32 !important;
+  border-color: #334155 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #94A3B8 !important;
+  opacity: 1 !important;
+}
+
+.dark input:disabled,
+.dark select:disabled,
+.dark textarea:disabled,
+.dark button:disabled {
+  color: #64748B !important;
+  background-color: #0F172A !important;
+  border-color: #1E293B !important;
+}
+
+/* Dropdown option elements in dark mode */
+.dark option {
+  background-color: #131F32 !important;
+  color: #FFFFFF !important;
+}
+
+/* Modals & Popovers in dark mode */
+.dark [role="dialog"],
+.dark [role="menu"] {
+  background-color: #172338 !important;
+  color: #FFFFFF !important;
+  border-color: #334155 !important;
+}
+
+/* Tooltips */
+.dark .tooltip {
+  background-color: #080F1E !important;
+  color: #FFFFFF !important;
+  border-color: #334155 !important;
+}
+
+/* ==========================================================================
+   SIDEBAR CONSISTENCY: ALWAYS CRISP WHITE ON DEEP NAVY #080F1E
+   ========================================================================== */
+aside {
+  background-color: #080F1E !important;
+  color: #FFFFFF !important;
+  border-color: #1E293B !important;
+}
+
+aside :is(span, p, h1, h2, div, button):not([class*="text-teal"]):not([class*="text-rose"]):not([class*="text-amber"]):not([class*="text-emerald"]):not([class*="bg-teal"]) {
+  color: #FFFFFF !important;
+}
+
+aside .text-slate-400,
+aside .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+/* ==========================================================================
+   ASSET RISK SUMMARY CARDS IN DARK MODE (EXPLICIT REQUIREMENTS)
+   Critical: bg #4C1826, text #FDA4AF
+   High: bg #452A16, text #FDBA74
+   Moderate: bg #423819, text #FDE68A
+   Low: bg #123C32, text #6EE7B7
+   Insufficient Data: neutral dark navy #172338 with white text
+   ========================================================================== */
+.dark .asset-risk-card-critical {
+  background-color: #4C1826 !important;
+  color: #FDA4AF !important;
+  border-color: #881337 !important;
+}
+.dark .asset-risk-card-high {
+  background-color: #452A16 !important;
+  color: #FDBA74 !important;
+  border-color: #7C2D12 !important;
+}
+.dark .asset-risk-card-moderate {
+  background-color: #423819 !important;
+  color: #FDE68A !important;
+  border-color: #713F12 !important;
+}
+.dark .asset-risk-card-low {
+  background-color: #123C32 !important;
+  color: #6EE7B7 !important;
+  border-color: #064E3B !important;
+}
+.dark .asset-risk-card-insufficient {
+  background-color: #172338 !important;
+  color: #FFFFFF !important;
+  border-color: #334155 !important;
+}
+
+/* ==========================================================================
+   SMOOTH TRANSITIONS & REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  body, header, aside, main, .bg-white, .bg-slate-50 {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+}

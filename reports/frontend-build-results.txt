@@ -1,0 +1,19 @@
+
+> react-example@0.0.0 build
+> vite build
+
+[36mvite v8.3.4 [32mbuilding client environment for production...[36m[39m
+transforming...
+✓ 2276 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     1.75 kB │ gzip:   0.69 kB
+dist/assets/index-DXcXxVKs.css     97.48 kB │ gzip:  15.12 kB
+dist/assets/index-C6VSSEQS.js   1,091.58 kB │ gzip: 273.51 kB
+
+[32m✓ built in 546ms[39m
+[33m[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m

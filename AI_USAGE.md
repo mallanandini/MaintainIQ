@@ -32,6 +32,18 @@ AI was leveraged as an accelerated implementation partner and pair programmer fo
 - **Decision**: Added cross-entity validation when creating or updating work orders. If an asset is `OUT_OF_SERVICE`, the API checks if the maintenance type has `is_emergency=True`, code `EMERGENCY`, or priority `CRITICAL`.
 - **Rationale**: Prevents preventative or routine maintenance schedules from dispatching on broken machinery that requires emergency overhaul first.
 
+### E. Accessibility & Responsive Navigation
+- **Decision**: Added keyboard navigation (`tabIndex={0}`, Enter/Space handlers) to table rows, Escape key event listeners on all modals and drawers, and backdrop click dismissal.
+- **Rationale**: Industrial operations software must be operable by keyboard and field tablets. Added a responsive hamburger drawer for mobile screens (`<Menu>` toggle and slide-out `<aside>`).
+
+### F. Dual HTTP Update Handlers (PUT & PATCH Compatibility)
+- **Decision**: Decorated both `@router.put("/{wo_id}")` and `@router.patch("/{wo_id}")` on `update_work_order_details`.
+- **Rationale**: Strict REST clients expecting complete resource replacement via `PUT` and incremental patch clients expecting `PATCH` are both fully supported without API drift.
+
+### G. Database Seeding Protection in Production
+- **Decision**: Guarded `POST /api/seed` with environment checks (`ALLOW_SEEDING`) and `ADMIN_API_KEY`.
+- **Rationale**: Protects live operational databases against accidental data wiping.
+
 ---
 
 ## 3. Bugs Discovered & Resolved During Verification
@@ -54,11 +66,16 @@ AI was leveraged as an accelerated implementation partner and pair programmer fo
 - **Symptom**: Pytest logged 32 deprecation warnings regarding `class Config: from_attributes = True`, `.dict()`, and `.from_orm()`.
 - **Fix**: Updated all schemas to use Pydantic v2 `ConfigDict(from_attributes=True)`, replaced `.dict()` calls with `.model_dump()`, and replaced `.from_orm()` calls with `.model_validate()`.
 
+### Bug 5: Missing Pagination on Large Tables
+- **Symptom**: Tables loaded all records into memory without row pagination controls.
+- **Fix**: Added optional `page` and `page_size` query parameters with `X-Total-Count` response headers in FastAPI routers, plus responsive client-side pagination bars with items-per-page selection and page jumping in `WorkOrderTable.tsx` and `AssetsPage.tsx`.
+
 ---
 
 ## 4. Verification Record
 
-- **Pytest Suite**: 13 automated tests executed and passing (`13 passed in 1.11s`).
-- **TypeScript Compilation**: Executed `tsc --noEmit` with zero errors.
-- **Vite Build**: Verified production asset bundling (`npm run build`).
-- **Interactive UI**: Verified Work Order List, Work Order Creation, and Work Order Details screens with real lifecycle state transitions.
+- **Pytest Automated Suite**: 85 automated tests passing (`85 passed in 8.59s`).
+- **Live MySQL Verification Suite**: 23 end-to-end integration checks passing against live MySQL (`scripts/verify_api.py`).
+- **TypeScript Static Analysis**: Executed `npx tsc --noEmit` with zero errors.
+- **Vite Production Bundling**: Verified asset compilation with `npm run build` (`dist/` generated with zero errors).
+- **Interactive UI Verification**: Full verification of Work Order Lifecycle, Smart Technician Recommendations, Maintenance Analytics charts, Asset Health & Risk monitoring, Digital Inspection Checklists, CSV exports, and Printable Dispatch Sheets.

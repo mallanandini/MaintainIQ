@@ -1,10 +1,14 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
 
 class WorkOrder(Base):
     __tablename__ = "work_orders"
+    __table_args__ = (
+        Index("ix_work_orders_status_scheduled_date", "status", "scheduled_date"),
+        Index("ix_work_orders_tech_status", "assigned_technician_id", "status"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     work_order_number = Column(String(64), unique=True, nullable=False, index=True)
@@ -31,18 +35,38 @@ class WorkOrder(Base):
     asset = relationship("Asset", back_populates="work_orders")
     technician = relationship("Technician", back_populates="work_orders")
     maintenance_type = relationship("MaintenanceType", back_populates="work_orders")
-    status_history = relationship("WorkOrderStatusHistory", back_populates="work_order", cascade="all, delete-orphan", order_by="WorkOrderStatusHistory.created_at.desc()")
+    status_history = relationship("WorkOrderStatusHistory", back_populates="work_order", cascade="all, delete-orphan", order_by="WorkOrderStatusHistory.created_at.asc(), WorkOrderStatusHistory.id.asc()")
+    checklist = relationship("WorkOrderChecklist", back_populates="work_order", uselist=False, cascade="all, delete-orphan")
 
 
 class WorkOrderStatusHistory(Base):
     __tablename__ = "work_order_status_history"
+    __table_args__ = (
+        Index("ix_wosh_to_status_created_at", "to_status", "created_at"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     work_order_id = Column(Integer, ForeignKey("work_orders.id", ondelete="CASCADE"), nullable=False, index=True)
     from_status = Column(String(20), nullable=True)
     to_status = Column(String(20), nullable=False)
-    changed_by = Column(String(100), nullable=False, default="System Dispatcher")
+    changed_by = Column(String(100), nullable=True, default=None)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
     work_order = relationship("WorkOrder", back_populates="status_history")
+
+    @property
+    def previous_status(self):
+        return self.from_status
+
+    @property
+    def new_status(self):
+        return self.to_status
+
+    @property
+    def changed_at(self):
+        return self.created_at
+
+    @property
+    def actor_id(self):
+        return self.changed_by

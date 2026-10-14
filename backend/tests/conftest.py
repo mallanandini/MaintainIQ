@@ -52,7 +52,8 @@ def db_session(engine):
     m_prev = MaintenanceType(code="PREVENTATIVE", name="Preventative", is_emergency=False)
     m_corr = MaintenanceType(code="CORRECTIVE", name="Corrective", is_emergency=False)
     m_emerg = MaintenanceType(code="EMERGENCY", name="Emergency", is_emergency=True)
-    session.add_all([m_prev, m_corr, m_emerg])
+    m_fake_emerg = MaintenanceType(code="EMERGENCY_DECOY", name="Emergency Decoy", is_emergency=False)
+    session.add_all([m_prev, m_corr, m_emerg, m_fake_emerg])
     session.flush()
 
     tech1 = Technician(
@@ -69,7 +70,14 @@ def db_session(engine):
         specialization="Mechanical",
         status="INACTIVE"
     )
-    session.add_all([tech1, tech_inactive])
+    tech_leave = Technician(
+        employee_id="TECH-T3",
+        name="Leave Guy",
+        email="leave@test.com",
+        specialization="HVAC",
+        status="ON_LEAVE"
+    )
+    session.add_all([tech1, tech_inactive, tech_leave])
     session.flush()
 
     asset_op = Asset(

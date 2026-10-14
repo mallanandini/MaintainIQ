@@ -180,51 +180,55 @@ All endpoints follow REST principles with standard HTTP response codes (`200 OK`
 │   │   ├── config.py            # Environment & database settings
 │   │   ├── database.py          # SQLAlchemy engine & session factory
 │   │   ├── models/              # SQLAlchemy ORM models
-│   │   │   ├── __init__.py
 │   │   │   ├── asset.py
 │   │   │   ├── technician.py
 │   │   │   ├── maintenance_type.py
-│   │   │   └── work_order.py
+│   │   │   ├── work_order.py
+│   │   │   └── checklist.py
 │   │   ├── schemas/             # Pydantic v2 validation contracts
-│   │   │   ├── __init__.py
 │   │   │   ├── asset.py
 │   │   │   ├── technician.py
-│   │   │   └── work_order.py
+│   │   │   ├── work_order.py
+│   │   │   ├── analytics.py
+│   │   │   ├── asset_health.py
+│   │   │   └── checklist.py
 │   │   ├── services/            # Domain services & business rules
-│   │   │   ├── __init__.py
-│   │   │   ├── sequence.py      # Concurrency-safe WO number generator
-│   │   │   └── work_order_service.py # State machine & rule enforcement
+│   │   │   ├── sequence.py      # Concurrency-safe WO sequence generator
+│   │   │   ├── work_order_service.py # State machine & 6 business rules
+│   │   │   ├── recommendation_service.py # Explainable technician recommendation engine
+│   │   │   ├── analytics_service.py # SQL aggregations, completion rate & overdue reports
+│   │   │   ├── asset_health_service.py # Explainable 0-100 asset risk health scoring
+│   │   │   └── checklist_service.py # Inspection checklist execution & attachment safety
 │   │   ├── routers/             # FastAPI API endpoints
-│   │   │   ├── __init__.py
-│   │   │   ├── assets.py
-│   │   │   ├── technicians.py
-│   │   │   ├── work_orders.py
-│   │   │   └── dashboard.py
-│   │   └── seed.py              # Realistic data seeder
-│   ├── main.py                  # FastAPI application entrypoint
-│   └── tests/                   # Pytest test suite
-│       ├── __init__.py
-│       ├── conftest.py          # Test database fixtures
-│       ├── test_business_rules.py # Strict tests for 6 mandatory rules
-│       ├── test_work_orders.py   # Full CRUD and transition tests
-│       └── test_assets_technicians.py # Asset and technician tests
+│   │   │   ├── assets.py        # Asset CRUD, health, and paginated lists
+│   │   │   ├── technicians.py   # Technician directory and prospective recommendations
+│   │   │   ├── work_orders.py   # Work orders (GET with pagination, POST, PUT & PATCH, CSV export)
+│   │   │   ├── dashboard.py     # Aggregated analytics, overdue reports, workload reports
+│   │   │   └── checklists.py    # Inspection checklist templates and execution
+│   │   └── seed.py              # Realistic data seeder (protected in production)
+│   ├── main.py                  # FastAPI application entrypoint & security middleware
+│   └── tests/                   # Pytest automated test suite (85 tests)
+├── scripts/
+│   └── verify_api.py            # End-to-end verification suite (23 live checks against MySQL)
 ├── server.ts                    # Express dev server (proxy to FastAPI & fallback engine)
 ├── src/                         # Frontend React Application
 │   ├── api/                     # Type-safe API client layer
-│   │   ├── client.ts
-│   │   └── types.ts
+│   │   ├── client.ts            # REST client with PUT/PATCH and pagination
+│   │   └── types.ts             # TypeScript domain interfaces
 │   ├── components/              # UI components
-│   │   ├── layout/              # Sidebar, Header, Breadcrumbs
+│   │   ├── layout/              # Sidebar (desktop + mobile drawer), Header
 │   │   ├── ui/                  # Button, Badge, Modal, Input, Select, Table
-│   │   ├── work-orders/         # WO List, WO Card, WO Filters, WO Timeline, Transition Dialog
-│   │   ├── assets/              # Asset Modal, Asset Details Drawer, Asset Table
-│   │   └── technicians/         # Technician Modal, Technician Card
+│   │   ├── work-orders/         # WO Table (paginated), Filters, Dispatch Sheet, Checklists
+│   │   ├── assets/              # Asset Modal, Asset Details Drawer, Health Card, RiskBadge
+│   │   ├── technicians/         # Technician Modal, Recommendations Card
+│   │   └── analytics/           # MaintenanceAnalyticsView (Recharts, reports)
 │   ├── pages/                   # Main Views
 │   │   ├── WorkOrdersPage.tsx   # Work Order List with combined filters & search
-│   │   ├── WorkOrderDetailPage.tsx # Detailed view with history timeline
-│   │   ├── CreateWorkOrderPage.tsx # Validated work order creation form
-│   │   ├── AssetsPage.tsx       # Asset registry & maintenance history
-│   │   └── TechniciansPage.tsx  # Technician directory & active workload
+│   │   ├── WorkOrderDetailPage.tsx # Detailed view with history timeline & checklists
+│   │   ├── CreateWorkOrderPage.tsx # Validated work order creation with smart recommendations
+│   │   ├── AssetsPage.tsx       # Asset registry with pagination & health monitoring
+│   │   ├── TechniciansPage.tsx  # Technician directory & active workload
+│   │   └── AnalyticsPage.tsx    # Dedicated analytics & audit report dashboards
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
@@ -232,35 +236,29 @@ All endpoints follow REST principles with standard HTTP response codes (`200 OK`
 
 ---
 
-## 5. Implementation Plan
+## 5. API Endpoint Specifications
 
-1. **Phase 1: Backend Domain Models & Migration Architecture**
-   - Setup Alembic configuration and SQLAlchemy models.
-   - Implement concurrency-safe sequence generator and business rule validator service.
-   - Create Pydantic v2 request/response schemas.
+### Work Orders
+- `GET /api/work-orders`: Filter by `q`, `status`, `priority`, `asset_id`, `technician_id`, `start_date`, `end_date`, `is_overdue`. Supports pagination with `page`, `page_size`, and returns `X-Total-Count` header.
+- `POST /api/work-orders`: Create work order enforcing all 6 business rules.
+- `GET /api/work-orders/{id}`: Detailed work order with asset, technician, type, and history.
+- `PUT /api/work-orders/{id}`: Full update of work order metadata.
+- `PATCH /api/work-orders/{id}`: Partial update of work order metadata (identical handler to PUT).
+- `POST /api/work-orders/{id}/transition`: State machine transition (`OPEN` -> `ASSIGNED` -> `IN_PROGRESS` -> `COMPLETED`, or `CANCELLED`).
+- `GET /api/work-orders/{id}/history`: Chronological audit trail.
+- `GET /api/work-orders/export`: RFC 4180 CSV export of filtered work orders.
 
-2. **Phase 2: Pytest Automated Verification of All 6 Rules**
-   - Write comprehensive Pytest test suite covering:
-     - Rule 1: Unique WO numbers under concurrent operations.
-     - Rule 2: CRITICAL work orders require assigned technician.
-     - Rule 3: COMPLETED cannot return to OPEN.
-     - Rule 4: CANCELLED cannot move to IN_PROGRESS.
-     - Rule 5: Cannot schedule in past.
-     - Rule 6: OUT_OF_SERVICE asset cannot receive non-emergency orders.
-   - Run `python3 -m pytest` to achieve 100% test pass.
+### Technician Recommendations
+- `GET /api/work-orders/{id}/technician-recommendations`: Top 3 recommended technicians for existing work order.
+- `GET /api/technicians/recommendations`: Prospective recommendations for work order creation.
 
-3. **Phase 3: FastAPI Application Routers & Seeder**
-   - Complete endpoints for Work Orders, Assets, Technicians, Maintenance Types, and Dashboard stats.
-   - Implement realistic industrial seeder with historical logs.
-   - Configure Node/Express server to run FastAPI backend and proxy requests.
+### Analytics & Reports
+- `GET /api/dashboard/stats`: High-level counters for dashboard stat cards.
+- `GET /api/dashboard/analytics`: Comprehensive SQL aggregations, completion rates, overdue metrics, workload, and trends.
+- `GET /api/dashboard/reports/overdue` & `/export`: Audited overdue orders with CSV download.
+- `GET /api/dashboard/reports/technician-workload` & `/export`: Capacity utilization and CSV download.
 
-4. **Phase 4: Frontend Production-Grade UI**
-   - Implement modern SaaS layout: restrained navy (`#0f172a`), crisp white, precision teal (`#0d9488`).
-   - Screen 1: Work Order List with search, combined filters (status, priority, asset, technician), operational KPIs.
-   - Screen 2: Create Work Order with instant client + server validation, asset status checks, and technician requirements.
-   - Screen 3: Work Order Details with full audit history timeline, state transition actions, technician reassignment.
-   - Asset & Technician management drawers/modals with maintenance history.
-
-5. **Phase 5: Verification & Documentation**
-   - Run `compile_applet` and test suite.
-   - Generate `AI_USAGE.md` and complete `README.md`.
+### Asset Health & Checklists
+- `GET /api/assets/health`: Fleet-wide 0-100 risk scoring.
+- `GET /api/assets/{id}/health`: Single asset risk factor breakdown.
+- `GET /api/work-orders/{id}/checklists`: Digital inspection checklist with pass/fail/na states.

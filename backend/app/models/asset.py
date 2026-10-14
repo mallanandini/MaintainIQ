@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, Float, String, DateTime, Text
 from sqlalchemy.orm import relationship
 from backend.app.database import Base
 
@@ -16,6 +16,10 @@ class Asset(Base):
     manufacturer = Column(String(100), nullable=True)
     model_number = Column(String(100), nullable=True)
     criticality = Column(String(20), nullable=False, default="MEDIUM") # LOW, MEDIUM, HIGH, CRITICAL
+    operating_hours = Column(Float, nullable=True)
+    operating_cycles = Column(Integer, nullable=True)
+    service_threshold_hours = Column(Float, nullable=True)
+    service_threshold_cycles = Column(Integer, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
